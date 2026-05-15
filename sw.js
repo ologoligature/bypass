@@ -1,1 +1,3 @@
-self.addEventListener('fetch', function(event) {});
+self.addEventListener('fetch', (e) => {
+    e.respondWith(fetch(e.request));
+});
