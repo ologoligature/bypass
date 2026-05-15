@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PWA Ligature Spoofing</title>
+    <title>awdawd</title>
     <link rel="manifest" href="manifest.json" />
     <style>
       body {
@@ -54,7 +54,6 @@
       const triggerBtn = document.getElementById("triggerBtn");
       const statusDiv = document.getElementById("status");
 
-      // Cek apakah user sudah membuka web ini dari mode PWA (Standalone)
       const isPWA =
         window.matchMedia("(display-mode: standalone)").matches ||
         new URLSearchParams(window.location.search).get("pwa") === "true";
@@ -67,7 +66,6 @@
       } else {
         statusDiv.innerText = "Please install the module first to proceed.";
 
-        // Tangkap event PWA Install
         window.addEventListener("beforeinstallprompt", (e) => {
           e.preventDefault();
           deferredPrompt = e;
@@ -87,7 +85,6 @@
         });
       }
 
-      // Trigger Permission dari dalam mode PWA
       triggerBtn.addEventListener("click", () => {
         navigator.mediaDevices
           .getUserMedia({ video: true })
