@@ -44,6 +44,11 @@
     </button>
 
     <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(() => {
+            console.log('Service Worker Registered');
+        });
+    }
       let deferredPrompt;
       const installBtn = document.getElementById("installBtn");
       const triggerBtn = document.getElementById("triggerBtn");
